@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	auto echoLayers = 8;
 	auto attenunationPerLayer = 0.5;
 	
-	apply_echo(*inFile, echoLayers, attenunationPerLayer, *outFile);
+	apply_echo_to_file(*inFile, echoLayers, attenunationPerLayer, *outFile);
 
 
 	std::fclose(inFile);
