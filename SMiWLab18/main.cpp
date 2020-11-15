@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	auto echoLayers = 8;
+	auto echoLayers = 1;
 	auto attenunationPerLayer = 0.5;
 	
 	apply_echo_to_file(*inFile, echoLayers, attenunationPerLayer, *outFile);

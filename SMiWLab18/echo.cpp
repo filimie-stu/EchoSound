@@ -12,6 +12,10 @@ std::vector<buffer_t>
 initialize_echo_buffers(int echoLayers, std::size_t samplingFreq) {
 	auto echoBuffers = std::vector<std::vector<std::int_least16_t>>();
 	for (int i = 0; i < echoLayers; i++) {
+		
+		// Each next echo-buffer-length is a next multiple of the sampling frequency.
+		// This way, the next echo is always half a second behind the previous one.
+		//
 		echoBuffers.emplace_back((i + 1) * samplingFreq);
 	}
 	return echoBuffers;
@@ -44,7 +48,7 @@ void apply_echo_to_sequence(
 
 void apply_echo_to_file(std::FILE& baseFile, int echoLayers, double attenuation, std::FILE& outFile) {
 
-	constexpr std::size_t SAMPLING_FREQUENCY_HZ = 44100;
+	constexpr std::size_t SAMPLING_FREQUENCY_HZ = 44100;	// This has to match the sampling frequency of input file.
 	constexpr std::size_t IO_BUFFER_SIZE_BYTES = 1 << 12;	// Arbitrary choice of chunk size.
 
 	auto echoBuffers = initialize_echo_buffers(echoLayers, SAMPLING_FREQUENCY_HZ);
@@ -52,8 +56,16 @@ void apply_echo_to_file(std::FILE& baseFile, int echoLayers, double attenuation,
 
 	auto inBuffer = buffer_t(IO_BUFFER_SIZE_BYTES);
 	auto samplesRead = std::size_t(0);
+
 	do {
+		// Each iteration of the loop applies all echo layers
+		// to next chunk of data. 
+
+		// Reading the chunk from input file.
 		samplesRead = std::fread(inBuffer.data(), 2, inBuffer.size(), &baseFile);
+
+		// Output buffer initially contains input data. Afterwards, more layers are
+		// written on top of it.
 		auto outBuffer = inBuffer;
 
 		for (int i = 0; i < echoLayers; i++) {
@@ -68,6 +80,8 @@ void apply_echo_to_file(std::FILE& baseFile, int echoLayers, double attenuation,
 
 		}
 
+		// Writing the chunk to output file.
 		std::fwrite(outBuffer.data(), 2, samplesRead, &outFile);
+	
 	} while (samplesRead == inBuffer.size());
 }
